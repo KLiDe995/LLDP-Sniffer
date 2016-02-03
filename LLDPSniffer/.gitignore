@@ -1,0 +1,9 @@
+debug/
+release/
+Win32/
+*.user
+*.sdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
