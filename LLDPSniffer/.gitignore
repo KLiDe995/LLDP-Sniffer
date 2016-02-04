@@ -7,3 +7,4 @@ Win32/
 *.suo
 *.vcxproj
 *.filters
+*.opensdf
