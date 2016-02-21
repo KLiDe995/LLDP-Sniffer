@@ -1,7 +1,7 @@
 debug/
 release/
 Win32/
-*.user
+*.user*
 *.sdf
 *.sln
 *.suo
