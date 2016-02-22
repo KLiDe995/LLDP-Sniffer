@@ -8,13 +8,16 @@
 #include <netinet/if_ether.h>
 #include <net/ethernet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <arpa/inet.h>
 
 #include <netinet/ip.h>
+#include <linux/filter.h>
 
 using namespace std;
 
-#define ETH_P_LLDP 0x88CC
+#define ARRAY_SIZE(array) \
+    (sizeof(array) / sizeof(*array))
 
 QTextStream& qStdOut()
 {
@@ -32,11 +35,29 @@ int main(int argc, char *argv[])
     int saddr_size,data_size;
     uchar *buf = (uchar*) malloc(65536);
 
+    struct sock_filter code[] = {
+        { 0x28,  0,  0, 0x0000000c },
+        { 0x15,  0,  1, 0x000088cc },
+        { 0x06,  0,  0, 0xffffffff },
+        { 0x06,  0,  0, 0000000000 },
+    };
+
+    struct sock_fprog bpf = {
+        .len = ARRAY_SIZE(code),
+        .filter = code
+    };
+
     int sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL)); //LLDP - 0x88CC
     if(sock<0)
     {
        perror("Socket error!");
        return 1;
+    }
+    int ret = setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf));
+    if (ret < 0)
+    {
+        perror("Socket options error!");
+        return 2;
     }
     while(1)
     {
