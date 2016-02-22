@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     struct sock_filter code[] = {
         { 0x28,  0,  0, 0x0000000c },
-        { 0x15,  0,  1, 0x000088cc },
+        { 0x15,  0,  1, 0x000088cc }, //88cc
         { 0x06,  0,  0, 0xffffffff },
         { 0x06,  0,  0, 0000000000 },
     };
@@ -75,14 +75,20 @@ int main(int argc, char *argv[])
 
 void ProcessPacket(unsigned char* buffer, int size)
 {
-    //Нада перевесети в 16рич
     struct ethhdr *eth = (struct ethhdr*) buffer;
-    //if(eth->h_dest[1]==128)
-    //{
-        qStdOut() << QString::number(eth->h_dest[0])+QString::number(eth->h_dest[1])+QString::number(eth->h_dest[2])+QString::number(eth->h_dest[3])+QString::number(eth->h_dest[4])+QString::number(eth->h_dest[5])<<endl;
-    //}
-    //else
-    //    qStdOut()<<"Other packet"<<endl;
+    qStdOut()<<"Ethertype="<<QString::number(eth->h_proto,16)<<"  Dest: "
+            <<QString::number(eth->h_dest[0],16)<<"."
+            <<QString::number(eth->h_dest[1],16)<<"."
+            <<QString::number(eth->h_dest[2],16)<<"."
+            <<QString::number(eth->h_dest[3],16)<<"."
+            <<QString::number(eth->h_dest[4],16)<<"."
+            <<QString::number(eth->h_dest[5],16)<<"  Src: "
+            <<QString::number(eth->h_source[0],16)<<"."
+            <<QString::number(eth->h_source[1],16)<<"."
+            <<QString::number(eth->h_source[2],16)<<"."
+            <<QString::number(eth->h_source[3],16)<<"."
+            <<QString::number(eth->h_source[4],16)<<"."
+            <<QString::number(eth->h_source[5],16)<<endl;
 }
 
 
