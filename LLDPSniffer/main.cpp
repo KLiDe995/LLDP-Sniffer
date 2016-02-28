@@ -14,6 +14,8 @@
 #include <netinet/ip.h>
 #include <linux/filter.h>
 
+#include <lldpdu.h>
+
 using namespace std;
 
 #define ARRAY_SIZE(array) \
@@ -89,6 +91,13 @@ void ProcessPacket(unsigned char* buffer, int size)
             <<QString::number(eth->h_source[3],16)<<"."
             <<QString::number(eth->h_source[4],16)<<"."
             <<QString::number(eth->h_source[5],16)<<endl;
+    for(int i=sizeof(struct ethhdr); i<size-sizeof(struct ethhdr); i++)
+    {
+        qStdOut()<<QString::number(buffer[i],16)<<" "<<flush;
+    }
+    qStdOut()<<endl;
+    LLDPDU *test = new LLDPDU();
+    test->Parse(buffer+sizeof(struct ethhdr), size-sizeof(struct ethhdr));
 }
 
 
