@@ -116,36 +116,36 @@ void PrintTLVs(unsigned char* buffer, int size)
         TLV* tmp = lldpDU->GetTLVByIndex(i);
         switch(tmp->type)
         {
-        case 0:
+        case LLDP_TLV_END:
             qStdOut()<<"TLV Type: END OF LLDP ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    END OF LLDP"<<endl<<"================================================="<<endl;
             break;
-        case 1:
+        case LLDP_TLV_CHID:
             qStdOut()<<"TLV Type: CHASSIS ID ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    Subtype: "<<tmp->value[0]<<" ID: "<<flush;
             for(int j=1;j<tmp->length;j++)
                 qStdOut()<<QString::number(tmp->value[j],16)<<"."<<flush;
             qStdOut()<<endl;
             break;
-        case 2:
+        case LLDP_TLV_PID:
             qStdOut()<<"TLV Type: PORT ID ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    Subtype: "<<tmp->value[0]<<" ID: "<<flush;
             for(int j=1;j<tmp->length;j++)
                 qStdOut()<<QString(tmp->value[j])<<flush;
             qStdOut()<<endl;
             break;
-        case 3:
+        case LLDP_TLV_TTL:
             qStdOut()<<"TLV Type: TIME TO LIVE ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    Value: "<<QString::number(tmp->value[0],2).append(QString::number(tmp->value[1],2)).toInt(0,2)<<endl;
             break;
-        case 5:
+        case LLDP_TLV_SYS_NAME:
             qStdOut()<<"TLV Type: SYSTEM NAME ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    Value: "<<flush;
             for(int j=0;j<tmp->length;j++)
                 qStdOut()<<QString(tmp->value[j])<<flush;
             qStdOut()<<endl;
             break;
-        case 6:
+        case LLDP_TLV_SYS_DESCR:
             qStdOut()<<"TLV Type: SYSTEM DESCRIPTION ("<<tmp->type<<") Length: "<<tmp->length<<endl;
             qStdOut()<<"    Value: "<<flush;
             for(int j=0;j<tmp->length;j++)
