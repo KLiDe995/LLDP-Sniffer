@@ -19,8 +19,8 @@
 
 //LLDP TLV structure
 struct TLV {
-    unsigned char type;
-    unsigned char length;
+    unsigned int type;
+    unsigned int length;
     unsigned char *value;
 };
 
@@ -29,7 +29,7 @@ class LLDPDU
 {
 private:
     QVector<TLV*> tlvs;
-    void ParseTypeAndLength(unsigned char Buffer[2], int& type, int& length);
+    void ParseTypeAndLength(unsigned char Buffer[2], uint& type, uint& length);
 public:
     LLDPDU();
     ~LLDPDU();

@@ -17,7 +17,7 @@ void LLDPDU::freeMemory()
     tlvs.clear();
 }
 
-void LLDPDU::ParseTypeAndLength(unsigned char *Buffer,int& type, int& length)
+void LLDPDU::ParseTypeAndLength(unsigned char *Buffer,uint& type, uint& length)
 {
     if(sizeof(Buffer)<2)
         throw new QException();
@@ -39,8 +39,8 @@ void LLDPDU::Parse(unsigned char* Buffer, int size)
         throw new QException();
     while(size > 0)
     {
-        int tmpType;
-        int tmpLen;
+        uint tmpType;
+        uint tmpLen;
         ParseTypeAndLength(Buffer,tmpType,tmpLen);
         unsigned char *tmpValue = new unsigned char[tmpLen];
         for(int i=0;i<tmpLen; i++)
@@ -61,6 +61,7 @@ TLV* LLDPDU::GetTLVByType(int type)
         if(tlvs[i]->type==type)
             return tlvs[i];
     }
+    return Q_NULLPTR;
 }
 
 TLV* LLDPDU::GetTLVByIndex(int index)
