@@ -20,7 +20,7 @@ void LLDPDU::freeMemory()
 void LLDPDU::ParseTypeAndLength(unsigned char *Buffer,int& type, int& length)
 {
     if(sizeof(Buffer)<2)
-        return;
+        throw new QException();
     QString typestr = QString::number(Buffer[0],2);
     QString lenstr(typestr[typestr.count()-1]);
     typestr.chop(1);
@@ -36,7 +36,7 @@ void LLDPDU::Parse(unsigned char* Buffer, int size)
         freeMemory();
     }
     if(size == 0 || sizeof(Buffer) == 0)
-        return;
+        throw new QException();
     while(size > 0)
     {
         int tmpType;
@@ -54,8 +54,24 @@ void LLDPDU::Parse(unsigned char* Buffer, int size)
 
 }
 
-TLV LLDPDU::GetTLV(int type)
+TLV* LLDPDU::GetTLVByType(int type)
 {
+    for(int i=0;i<tlvs.count(); i++)
+    {
+        if(tlvs[i]->type==type)
+            return tlvs[i];
+    }
+}
 
+TLV* LLDPDU::GetTLVByIndex(int index)
+{
+    if(index<0 || index >=tlvs.count())
+        throw new QException();
+    return tlvs[index];
+}
+
+int LLDPDU::TLVcount()
+{
+    return tlvs.count();
 }
 

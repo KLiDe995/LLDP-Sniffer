@@ -28,6 +28,7 @@ QTextStream& qStdOut()
 }
 
 void ProcessPacket(unsigned char* buffer, int size);
+void PrintTLVs(unsigned char* buffer, int size);
 
 int main(int argc, char *argv[])
 {
@@ -77,27 +78,107 @@ int main(int argc, char *argv[])
 
 void ProcessPacket(unsigned char* buffer, int size)
 {
-    struct ethhdr *eth = (struct ethhdr*) buffer;
-    qStdOut()<<"Ethertype="<<QString::number(eth->h_proto,16)<<"  Dest: "
-            <<QString::number(eth->h_dest[0],16)<<"."
-            <<QString::number(eth->h_dest[1],16)<<"."
-            <<QString::number(eth->h_dest[2],16)<<"."
-            <<QString::number(eth->h_dest[3],16)<<"."
-            <<QString::number(eth->h_dest[4],16)<<"."
-            <<QString::number(eth->h_dest[5],16)<<"  Src: "
-            <<QString::number(eth->h_source[0],16)<<"."
-            <<QString::number(eth->h_source[1],16)<<"."
-            <<QString::number(eth->h_source[2],16)<<"."
-            <<QString::number(eth->h_source[3],16)<<"."
-            <<QString::number(eth->h_source[4],16)<<"."
-            <<QString::number(eth->h_source[5],16)<<endl;
-    for(int i=sizeof(struct ethhdr); i<size-sizeof(struct ethhdr); i++)
+    try
     {
-        qStdOut()<<QString::number(buffer[i],16)<<" "<<flush;
+        struct ethhdr *eth = (struct ethhdr*) buffer;
+        qStdOut()<<"PACKET:"<<endl;
+        qStdOut()<<"Ethertype="<<QString::number(eth->h_proto,16)<<"  Dest: "
+                <<QString::number(eth->h_dest[0],16)<<"."
+                <<QString::number(eth->h_dest[1],16)<<"."
+                <<QString::number(eth->h_dest[2],16)<<"."
+                <<QString::number(eth->h_dest[3],16)<<"."
+                <<QString::number(eth->h_dest[4],16)<<"."
+                <<QString::number(eth->h_dest[5],16)<<"  Src: "
+                <<QString::number(eth->h_source[0],16)<<"."
+                <<QString::number(eth->h_source[1],16)<<"."
+                <<QString::number(eth->h_source[2],16)<<"."
+                <<QString::number(eth->h_source[3],16)<<"."
+                <<QString::number(eth->h_source[4],16)<<"."
+                <<QString::number(eth->h_source[5],16)<<endl;
+        PrintTLVs(buffer+sizeof(struct ethhdr), size-sizeof(struct ethhdr));
     }
-    qStdOut()<<endl;
-    LLDPDU *test = new LLDPDU();
-    test->Parse(buffer+sizeof(struct ethhdr), size-sizeof(struct ethhdr));
+    catch (QException ex)
+    {
+        qStdOut()<<"Error! "<<ex.what()<<endl;
+    }
+}
+
+void PrintTLVs(unsigned char* buffer, int size)
+{
+    LLDPDU *lldpDU = new LLDPDU();
+    QString PolygonOUI("012bb");
+    bool isPolygon = false;
+
+    lldpDU->Parse(buffer, size);
+
+    for(int i=0;i<lldpDU->TLVcount(); i++)
+    {
+        TLV* tmp = lldpDU->GetTLVByIndex(i);
+        switch(tmp->type)
+        {
+        case 0:
+            qStdOut()<<"TLV Type: END OF LLDP ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    END OF LLDP"<<endl<<"================================================="<<endl;
+            break;
+        case 1:
+            qStdOut()<<"TLV Type: CHASSIS ID ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Subtype: "<<tmp->value[0]<<" ID: "<<flush;
+            for(int j=1;j<tmp->length;j++)
+                qStdOut()<<QString::number(tmp->value[j],16)<<"."<<flush;
+            qStdOut()<<endl;
+            break;
+        case 2:
+            qStdOut()<<"TLV Type: PORT ID ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Subtype: "<<tmp->value[0]<<" ID: "<<flush;
+            for(int j=1;j<tmp->length;j++)
+                qStdOut()<<QString(tmp->value[j])<<flush;
+            qStdOut()<<endl;
+            break;
+        case 3:
+            qStdOut()<<"TLV Type: TIME TO LIVE ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Value: "<<QString::number(tmp->value[0],2).append(QString::number(tmp->value[1],2)).toInt(0,2)<<endl;
+            break;
+        case 5:
+            qStdOut()<<"TLV Type: SYSTEM NAME ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Value: "<<flush;
+            for(int j=0;j<tmp->length;j++)
+                qStdOut()<<QString(tmp->value[j])<<flush;
+            qStdOut()<<endl;
+            break;
+        case 6:
+            qStdOut()<<"TLV Type: SYSTEM DESCRIPTION ("<<tmp->type<<") Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Value: "<<flush;
+            for(int j=0;j<tmp->length;j++)
+                qStdOut()<<QString(tmp->value[j])<<flush;
+            qStdOut()<<endl;
+            break;
+        default:
+            qStdOut()<<"TLV Type: "<<tmp->type<<" Length: "<<tmp->length<<endl;
+            qStdOut()<<"    Value: "<<flush;
+            for(int j=1;j<tmp->length;j++)
+                qStdOut()<<QString::number(tmp->value[j],16)<<" "<<flush;
+            qStdOut()<<endl;
+            if(tmp->type==127 && QString::compare(QString::number(tmp->value[0],16).append(QString::number(tmp->value[1],16)).append(QString::number(tmp->value[2],16)),PolygonOUI) == 0)
+                isPolygon = true;
+            break;
+        }
+    }
+    if(isPolygon)
+        qStdOut()<<"YES : "<<flush;
+    else
+        qStdOut()<<"NO : "<<flush;
+    TLV* tmp = lldpDU->GetTLVByType(LLDP_TLV_SYS_DESCR);
+    for(int i=0; i<tmp->length; i++)
+    {
+        qStdOut()<<QString(tmp->value[i])<<flush;
+    }
+    qStdOut()<<" : "<<flush;
+    tmp = lldpDU->GetTLVByType(LLDP_TLV_MGMT_ADDR);
+    qStdOut()<<tmp->value[2]<<"."
+             <<tmp->value[3]<<"."
+             <<tmp->value[4]<<"."
+             <<tmp->value[5]<<endl;
+    qStdOut()<<"================================================="<<endl<<endl;
 }
 
 
